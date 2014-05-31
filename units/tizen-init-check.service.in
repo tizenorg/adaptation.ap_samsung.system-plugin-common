@@ -1,0 +1,11 @@
+[Unit]
+Description=Tizen Initialized check
+DefaultDependencies=no
+After=opt.mount
+Before=tizen-init-done.service tizen-initial-boot-done.service
+ConditionPathExists=@INITAILBOOT_DONE@
+ConditionPathExists=!@INITIALIZE_DONE@
+RefuseManualStart=yes
+
+[Service]
+ExecStart=/usr/bin/systemctl start tizen-init.target

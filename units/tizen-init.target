@@ -1,0 +1,5 @@
+[Unit]
+Description=Tizen Initialization
+Conflicts=emergency.service emergency.target
+Wants=local-fs.target swap.target
+After=local-fs.target swap.target emergency.service emergency.target

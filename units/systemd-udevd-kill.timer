@@ -1,0 +1,9 @@
+[Unit]
+Description=Stop systemd-udevd 30s After Completed Startup
+DefaultDependencies=no
+Conflicts=shutdown.target
+After=default.target
+Before=shutdown.target
+
+[Timer]
+OnActiveSec=30s

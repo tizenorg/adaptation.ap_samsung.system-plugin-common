@@ -1,0 +1,8 @@
+[Unit]
+Description=Stop Collecting Read-Ahead Data
+After=tizen-readahead-collect.service boot-animation.service
+Before=tizen-system.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl stop tizen-readahead-collect.service

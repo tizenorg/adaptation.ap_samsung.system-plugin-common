@@ -1,0 +1,8 @@
+[Unit]
+Description=Stop systemd-udevd service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl stop systemd-udevd.service
+ExecStartPost=/usr/bin/systemctl stop systemd-udevd-control.socket
+ExecStartPost=/usr/bin/systemctl stop systemd-udevd-kernel.socket

@@ -1,0 +1,11 @@
+[Unit]
+Description=waiting for window mananger
+After=xorg.service
+Before=tizen-boot.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'while [ ! -e /tmp/.wm_ready ]; do sleep 0.1 ; done'
+
+[Install]
+WantedBy=tizen-boot.target

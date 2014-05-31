@@ -1,0 +1,17 @@
+[Unit]
+Description=Collect Read-Ahead Data
+DefaultDependencies=no
+Conflicts=shutdown.target
+After=smack.service smack_pre_labeling_priv.service tizen-readahead-replay.service
+Before=sysinit.target shutdown.target
+Wants=tizen-readahead-collect-stop.service
+ConditionPathExists=!@READAHEAD_DIR@/.readahead
+
+[Service]
+Type=notify
+ExecStart=/usr/lib/systemd/systemd-readahead collect --savedir=@READAHEAD_DIR@
+RemainAfterExit=yes
+StandardOutput=null
+
+[Install]
+WantedBy=tizen-init.target

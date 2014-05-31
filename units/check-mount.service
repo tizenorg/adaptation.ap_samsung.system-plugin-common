@@ -1,0 +1,14 @@
+[Unit]
+Description=Check Mount
+ConditionPathIsMountPoint=!/opt/usr
+After=tizen-boot.target starter.service
+Requires=tizen-boot.target
+Before=tizen-system.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'while [ "z`/bin/grep /opt/usr /proc/mounts`" == "z" ]; do /bin/sleep 0.5; done'
+ExecStartPost=/bin/sleep 3
+
+[Install]
+WantedBy=tizen-system.target
