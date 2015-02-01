@@ -16,7 +16,6 @@ ode-server.service
 opt-usr-fsck.service
 osp-tmpdir-setup.service
 pkgmgr_recovery.service
-power_qcom_init.service
 pulseaudio.service
 qmuxd.service
 qseecom_ready.service
@@ -34,7 +33,6 @@ system-server.service
 tee-qsee.service
 telephony-daemon.service
 time.service
-trm.service
 wifi-module-check.service
 wm_ready.service
 wrt-security-daemon.service

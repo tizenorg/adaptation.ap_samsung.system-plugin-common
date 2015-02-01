@@ -6,6 +6,7 @@ Before=tizen-boot.target
 [Service]
 Type=oneshot
 ExecStart=/bin/sh -c 'while [ ! -e /tmp/.wm_ready ]; do sleep 0.1 ; done'
+TimeoutSec=10s
 
 [Install]
 WantedBy=tizen-boot.target

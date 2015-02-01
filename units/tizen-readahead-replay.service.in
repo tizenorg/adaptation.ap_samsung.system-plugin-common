@@ -2,15 +2,18 @@
 Description=Replay Read-Ahead Data
 DefaultDependencies=no
 Conflicts=shutdown.target
-After=smack.service smack_pre_labeling_priv.service
+After=smack.service smack-default-labeling.service
 Before=sysinit.target shutdown.target
+ConditionPathExists=!/run/systemd/readahead/noreplay
 ConditionPathExists=@READAHEAD_DIR@/.readahead
+ConditionVirtualization=no
 
 [Service]
 Type=notify
-ExecStart=/usr/lib/systemd/systemd-readahead replay --savedir=@READAHEAD_DIR@
+ExecStart=@rootlibexecdir@/systemd-readahead replay --savedir=@READAHEAD_DIR@
 RemainAfterExit=yes
 StandardOutput=null
+OOMScoreAdjust=1000
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target

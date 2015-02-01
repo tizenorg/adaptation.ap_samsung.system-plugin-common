@@ -1,0 +1,22 @@
+# Tizen specific additional rules
+
+SUBSYSTEM=="tty", KERNEL=="ptmx", SECLABEL{smack}="*"
+SUBSYSTEM=="tty", KERNEL=="tty", SECLABEL{smack}="*"
+SUBSYSTEM=="tty", KERNEL=="tty[0-9]*", SECLABEL{smack}="*"
+SUBSYSTEM=="vc", KERNEL=="vcs*|vcsa*", SECLABEL{smack}="*"
+KERNEL=="tty[A-Z]*[0-9]|pppox[0-9]*|ircomm[0-9]*|noz[0-9]*|rfcomm[0-9]*", SECLABEL{smack}="*"
+
+# input
+SUBSYSTEM=="input", KERNEL=="mouse*|mice|event*", GROUP="input", MODE="0660"
+
+# video
+KERNEL=="mali", GROUP="video", SECLABEL{smack}="*"
+KERNEL=="slp_global_lock", GROUP="video", SECLABEL{smack}="*"
+SUBSYSTEM=="video4linux", SECLABEL{smack}="*"
+SUBSYSTEM=="drm", SECLABEL{smack}="*"
+
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", SECLABEL{smack}="*"
+
+KERNEL=="fuse", SECLABEL{smack}="*"
+
+LABEL="tizen_default_permissions_end"

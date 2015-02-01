@@ -73,10 +73,17 @@ do_options()
 #				touch /opt/etc/.hib_capturing # make fastboot image again on next booting
 				/bin/mount -o remount,rw /
 				if [ -f /usr/share/usr_share_locale.squash ]; then
-					/bin/umount -l /usr/share/locale
-					/bin/rm -rf /usr/share/locale
-					/usr/bin/unsquashfs -d /usr/share/locale /usr/share/usr_share_locale.squash
-					/bin/rm -rf /usr/share/usr_share_locale.squash
+					SIZE=`df | grep rootfs | awk '{print $4}'`
+					BLOCK=`du -c /usr/share/locale/ | grep total | awk '{print $1}'`
+					if [ $BLOCK -lt $SIZE ]; then
+						/bin/umount -l /usr/share/locale
+						/bin/rm -rf /usr/share/locale
+						/usr/bin/unsquashfs -d /usr/share/locale /usr/share/usr_share_locale.squash
+						/bin/rm -rf /usr/share/usr_share_locale.squash
+						/usr/bin/find /usr/share/locale -exec /usr/bin/chsmack -a _ {} \;
+					else
+						echo "Can NOT unsqaushfs because no space in rootfs"
+					fi
 				fi
 				exit
 				;;

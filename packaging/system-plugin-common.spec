@@ -1,8 +1,7 @@
 ###########################
 # Default feature config. #
 ###########################
-# SMACK
-%define WITH_SMACK 1
+
 # udev daemon killer unit
 %define WITH_UDEVD_KILLER 0
 # If window manager exist then waiting unit will be installed.
@@ -10,11 +9,10 @@
 
 %define WITH_FREQUENT_FSTRIM 0
 
-%if "%{_repository}" == "wearable"
+%if "%{?tizen_profile_name}" == "wearable"
 %define WITH_FREQUENT_FSTRIM 1
+%define dirty_writeback_centisecs 1000
 %endif
-
-%define _prefix_devel /opt/usr/devel
 
 Name: system-plugin-common
 Summary: system common file of system
@@ -28,10 +26,11 @@ Source1001: %{name}.manifest
 
 BuildRequires: autoconf
 BuildRequires: automake
-%if %{WITH_SMACK}
-BuildRequires: libacl-devel
-BuildRequires: smack-devel
-%endif
+BuildRequires: libtool
+BuildRequires: kernel-headers
+BuildRequires: pkgconfig(dbus-1)
+BuildRequires: pkgconfig(glib-2.0)
+BuildRequires: pkgconfig(gio-2.0)
 
 Requires: e2fsprogs
 Requires: /bin/grep
@@ -48,17 +47,9 @@ Startup files
 %build
 cp %{SOURCE1001} .
 
-aclocal
-automake --add-missing
-autoconf
-%configure \
+./autogen.sh
+%configure CFLAGS='-g -O0 -Werror' \
         --prefix=%{_prefix} \
-%if 0%{?tizen_build_binary_release_type_eng:1}
-        --enable-engmode \
-%endif
-%if %{WITH_SMACK}
-        --enable-smack \
-%endif
 %if ! %{WITH_WMREADY}
         --disable-wmready \
 %endif
@@ -67,6 +58,12 @@ autoconf
 %endif
 %if %{WITH_FREQUENT_FSTRIM}
         --enable-frequent-fstrim \
+%endif
+%if ("%{?dirty_writeback_centisecs}" != "")
+        --with-dirty-writeback-centisecs=%{dirty_writeback_centisecs} \
+%endif
+%if "%{?tizen_profile_name}" == "mobile"
+        --enable-mobile
 %endif
 
 make %{?_smp_mflags}
@@ -77,6 +74,12 @@ make %{?_smp_mflags}
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/license
 cat LICENSE > $RPM_BUILD_ROOT%{_datadir}/license/%{name}
 
+%if "%{?tizen_profile_name}" == "mobile"
+mkdir -p %{buildroot}%{_libdir}/sysctl.d
+mkdir -p %{buildroot}%{_sysconfdir}
+touch %{buildroot}%{_sysconfdir}/machine-id
+%endif
+
 %post
 touch %{_sysconfdir}/ld.so.nohwcap
 
@@ -85,7 +88,6 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %{_datadir}/license/%{name}
 %{_sysconfdir}/systemd/default-extra-dependencies/ignore-units
 %{_bindir}/change-booting-mode.sh
-%{_bindir}/tizen-boot.sh
 
 # systemd service units
 %{_libdir}/systemd/system/tizen-generate-env.service
@@ -104,11 +106,9 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %{_libdir}/systemd/system/tizen-init-done.service
 %{_libdir}/systemd/system/tizen-init.target.wants/tizen-init-done.service
 %{_libdir}/systemd/system/tizen-initial-boot-done.service
-%{_libdir}/systemd/system/default.target.wants/tizen-initial-boot-done.service
 
 # fstrim units
 %{_bindir}/tizen-fstrim-on-charge.sh
-%{_libdir}/systemd/system/default.target.wants/tizen-fstrim-user.timer
 %{_libdir}/systemd/system/tizen-fstrim-user.service
 %{_libdir}/systemd/system/tizen-fstrim-user.timer
 
@@ -117,12 +117,63 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %{_libdir}/systemd/system/tizen-readahead-collect-stop.service
 %{_libdir}/systemd/system/tizen-init.target.wants/tizen-readahead-collect.service
 %{_libdir}/systemd/system/tizen-readahead-replay.service
-%{_libdir}/systemd/system/multi-user.target.wants/tizen-readahead-replay.service
 
 # udev daemon killer
 %if %{WITH_UDEVD_KILLER}
-%{_libdir}/systemd/system/default.target.wants/systemd-udevd-kill.timer
 %{_libdir}/systemd/system/systemd-udevd-kill.service
 %{_libdir}/systemd/system/systemd-udevd-kill.timer
+
+%if "%{?tizen_profile_name}" == "mobile"
+%{_libdir}/systemd/system/graphical.target.wants/systemd-udevd-kill.timer
+%elseif "%{?tizen_profile_name}" == "wearable"
+%{_libdir}/systemd/system/default.target.wants/systemd-udevd-kill.timer
+%endif
+
 %endif
 %manifest %{name}.manifest
+
+# mobile & wearable difference
+%if "%{?tizen_profile_name}" == "mobile"
+%{_libdir}/systemd/system/graphical.target.wants/tizen-initial-boot-done.service
+%{_libdir}/systemd/system/graphical.target.wants/tizen-fstrim-user.timer
+%{_libdir}/systemd/system/graphical.target.wants/tizen-readahead-replay.service
+%elseif "%{?tizen_profile_name}" == "wearable"
+%{_libdir}/systemd/system/default.target.wants/tizen-initial-boot-done.service
+%{_libdir}/systemd/system/default.target.wants/tizen-fstrim-user.timer
+%{_libdir}/systemd/system/multi-user.target.wants/tizen-readahead-replay.service
+%endif
+
+%if "%{?tizen_profile_name}" == "mobile"
+%ghost %config(noreplace) %{_sysconfdir}/machine-id
+
+%{_libdir}/udev/rules.d/51-tizen-udev-default.rules
+%{_libdir}/systemd/system/tizen-boot.target
+%{_libdir}/systemd/system/multi-user.target.wants/tizen-boot.target
+%{_libdir}/systemd/system/tizen-system.target
+%{_libdir}/systemd/system/multi-user.target.wants/tizen-system.target
+%{_libdir}/systemd/system/tizen-runtime.target
+%{_libdir}/systemd/system/multi-user.target.wants/tizen-runtime.target
+
+%config(noreplace) %{_sysconfdir}/ghost.conf
+%{_bindir}/ghost
+%{_libdir}/systemd/system/ghost.service
+%{_libdir}/systemd/system/multi-user.target.wants/ghost.service
+
+# sysctl
+%{_libdir}/sysctl.d/50-tizen-default.conf
+
+# cleanup storage
+%{_bindir}/cleanup-storage.sh
+%{_libdir}/systemd/system/basic.target.wants/cleanup-storage.service
+%{_libdir}/systemd/system/timers.target.wants/cleanup-storage.timer
+%{_libdir}/systemd/system/cleanup-storage.service
+%{_libdir}/systemd/system/cleanup-storage.timer
+
+%{_libdir}/systemd/system/tizen-journal-flush.service
+%{_libdir}/systemd/system/graphical.target.wants/tizen-journal-flush.service
+
+%{_libdir}/systemd/system/init-conf.service
+%{_libdir}/systemd/system/sysinit.target.wants/init-conf.service
+%elseif "%{?tizen_profile_name}" == "wearable"
+%{_libdir}/udev/rules.d/51-tizen-udev-default.rules
+%endif

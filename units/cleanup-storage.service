@@ -1,0 +1,10 @@
+[Unit]
+Description=Cleanup Storage
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cleanup-storage.sh
+
+[Install]
+WantedBy=basic.target
