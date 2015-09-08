@@ -1,0 +1,12 @@
+# See sysctl.d(5) and core(5) for for details.
+
+# This specifies an upper limit on the number of inotify instances
+# that can be created per real user ID.
+fs.inotify.max_user_instances=1024
+
+# In hundredths of a second, this is how often pdflush wakes up to
+# write data to disk.
+vm.dirty_writeback_centisecs=@DIRTY_WRITEBACK_CENTISECS@
+
+# config overcommit handling mode
+vm.overcommit_memory = 1

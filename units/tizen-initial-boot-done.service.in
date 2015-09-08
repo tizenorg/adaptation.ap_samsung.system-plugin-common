@@ -1,0 +1,11 @@
+[Unit]
+Description=Tizen initial boot flag generate
+After=default.target
+ConditionPathExists=!@INITAILBOOT_DONE@
+RefuseManualStart=yes
+
+[Service]
+ExecStart=/bin/touch @INITAILBOOT_DONE@
+
+[Install]
+WantedBy=default.target

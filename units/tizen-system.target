@@ -1,0 +1,6 @@
+[Unit]
+Description=Tizen System
+Requires=basic.target tizen-boot.target
+Conflicts=rescue.service rescue.target
+After=basic.target tizen-boot.target rescue.service rescue.target
+Before=multi-user.target

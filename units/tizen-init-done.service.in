@@ -1,0 +1,11 @@
+[Unit]
+Description=Tizen initialized flag done
+After=default.target
+ConditionPathExists=!@INITIALIZE_DONE@
+RefuseManualStart=yes
+
+[Service]
+ExecStart=/bin/touch @INITIALIZE_DONE@
+
+[Install]
+WantedBy=tizen-init.target

@@ -1,0 +1,112 @@
+#!/bin/sh
+
+TIZEN_LABEL="tizen"
+
+function do_ext4 {
+    EMMC_DEVICE="/dev/mmcblk0"
+    RET_PARTX=$(/usr/sbin/partx -s ${EMMC_DEVICE})
+    ROOTFS_PART=${EMMC_DEVICE}p$(IFS=; echo $RET_PARTX | /bin/awk 'tolower($6) == "rootfs" {print $1}')
+    SYSTEM_DATA_PART=${EMMC_DEVICE}p$(IFS=; echo $RET_PARTX | /bin/awk 'tolower($6) == "system-data" {print $1}')
+    USER_PART=${EMMC_DEVICE}p$(IFS=; echo $RET_PARTX | /bin/awk 'tolower($6) == "user" {print $1}')
+    CSC_PART=${EMMC_DEVICE}p$(IFS=; echo $RET_PARTX | /bin/awk 'tolower($6) == "csc" {print $1}')
+    MODULES_PART=${EMMC_DEVICE}p$(IFS=; echo $RET_PARTX | /bin/awk 'tolower($6) == "module" {print $1}')
+
+    # rootfs partition
+    PART_LABEL="$(/sbin/e2label $ROOTFS_PART)"
+    if [ "z${PART_LABEL}" != "z${TIZEN_LABEL}" ]; then
+        /bin/mount -o remount,rw /
+        /sbin/resize2fs -f $ROOTFS_PART
+        /bin/mount -o remount,ro /
+        /sbin/e2label $ROOTFS_PART $TIZEN_LABEL
+    fi
+
+    # system-data partition
+    PART_LABEL="$(/sbin/e2label $SYSTEM_DATA_PART)"
+    if [ "z${PART_LABEL}" != "z${TIZEN_LABEL}" ]; then
+        /bin/grep "$SYSTEM_DATA_PART" /proc/mounts || /sbin/e2fsck -y -f "$SYSTEM_DATA_PART"
+        /sbin/resize2fs -f $SYSTEM_DATA_PART
+        if [ $? -ne 0 ]; then
+            /sbin/e2fsck -y -f $SYSTEM_DATA_PART
+            /sbin/resize2fs -f $SYSTEM_DATA_PART
+        fi
+        /sbin/e2label $SYSTEM_DATA_PART $TIZEN_LABEL
+    fi
+
+    # CSC partition
+    PART_LABEL="$(/sbin/e2label $CSC_PART)"
+    if [ "z${PART_LABEL}" != "z${TIZEN_LABEL}" ]; then
+        /bin/grep "$CSC_PART" /proc/mounts || /sbin/e2fsck -y -f "$CSC_PART"
+        /sbin/resize2fs -f $CSC_PART
+        if [ $? -ne 0 ]; then
+            /sbin/e2fsck -y -f $CSC_PART
+            /sbin/resize2fs -f $CSC_PART
+        fi
+        /sbin/e2label $CSC_PART $TIZEN_LABEL
+    fi
+
+    # user partition
+    PART_LABEL="$(/sbin/e2label $USER_PART)"
+    if [ "z${PART_LABEL}" != "z${TIZEN_LABEL}" ]; then
+        /bin/grep "$USER_PART" /proc/mounts || /sbin/e2fsck -y -f "$USER_PART"
+        /sbin/resize2fs -f $USER_PART
+        if [ $? -ne 0 ]; then
+            /sbin/e2fsck -y -f $USER_PART
+            /sbin/resize2fs -f $USER_PART
+        fi
+        /sbin/e2label $USER_PART $TIZEN_LABEL
+    fi
+
+    # Mount system-data(/opt) partition.
+    if [ "z$SYSTEM_DATA_PART" != "z${EMMC_DEVICE}p" ]; then
+        /sbin/e2fsck -y -f $SYSTEM_DATA_PART
+        /bin/mount -t $FS_TYPE $SYSTEM_DATA_PART /opt -o errors=panic,nosuid
+        # If /opt partition is not mounted by crashing file system,
+        # then check partition using e2fsck and re-mount it.
+        if [ $? -ne 0 ]; then
+            /sbin/e2fsck -y -f $SYSTEM_DATA_PART
+            /bin/mount -t $FS_TYPE $SYSTEM_DATA_PART /opt -o errors=panic,nosuid
+        fi
+    fi
+
+    # Mount modules(/lib/modules) partition.
+    if [ "z$MODULES_PART" != "z${EMMC_DEVICE}p" ]; then
+        /bin/mount -t $FS_TYPE $MODULES_PART /lib/modules -o ro &
+    fi
+}
+
+function do_ubi {
+    UBI_DEVICE="ubi0"
+    ROOTFS_PART=${UBI_DEVICE}:rootfs
+    SYSTEM_DATA_PART=${UBI_DEVICE}:systemData
+    USER_PART=${UBI_DEVICE}:user
+    CSC_PART=${UBI_DEVICE}:csc
+    MODULES_PART=${UBI_DEVICE}:module
+
+    # Mount system-data(/opt) partition.
+    /bin/mount -t $FS_TYPE $SYSTEM_DATA_PART /opt -o rw
+}
+
+# !!! Start from here !!!
+if [ ! -e /etc/machine-id ]; then
+    /bin/mount -o remount,rw /
+    /usr/bin/systemd-machine-id-setup
+    /bin/mount -o remount,ro /
+fi
+
+for arg in $(/bin/cat /proc/cmdline); do
+    case "$arg" in
+        rootfstype=*)
+            FS_TYPE="${arg//rootfstype=}"
+            break;
+            ;;
+    esac
+done
+
+case $FS_TYPE in
+    ext4)
+        do_ext4;
+        ;;
+    ubifs)
+        do_ubi;
+        ;;
+esac

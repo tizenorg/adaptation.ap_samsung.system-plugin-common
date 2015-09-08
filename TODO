@@ -1,0 +1,16 @@
+log:
+
+* There is no regular log api in this package. We need some of regular
+  log api or wrapper.
+
+ghost:
+
+* boottime check point is hard coded now. That should be configurable.
+
+* bootloader time is not ready yet. After that ghost have to generate
+  time that and sum of that and platform boot time.
+
+* ghost dir disk usage threshold should be configurable.
+
+* bootchart generate directory should be parsed by bootchart.conf. Now
+  it is hard coded to "/run/log".
