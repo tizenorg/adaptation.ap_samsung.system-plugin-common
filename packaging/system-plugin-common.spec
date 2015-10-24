@@ -65,6 +65,12 @@ cp %{SOURCE1001} .
 %if "%{?tizen_profile_name}" == "mobile"
         --enable-mobile
 %endif
+%if "%{?tizen_profile_name}" == "wearable"
+        --enable-wearable
+%endif
+%if "%{?tizen_profile_name}" == "tv"
+        --enable-tv
+%endif
 
 make %{?_smp_mflags}
 
@@ -74,7 +80,7 @@ make %{?_smp_mflags}
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/license
 cat LICENSE > $RPM_BUILD_ROOT%{_datadir}/license/%{name}
 
-%if "%{?tizen_profile_name}" == "mobile"
+%if "%{?tizen_profile_name}" == "mobile" || "%{?tizen_profile_name}" == "tv"
 mkdir -p %{buildroot}%{_libdir}/sysctl.d
 mkdir -p %{buildroot}%{_sysconfdir}
 touch %{buildroot}%{_sysconfdir}/machine-id
@@ -88,6 +94,7 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %{_datadir}/license/%{name}
 %{_sysconfdir}/systemd/default-extra-dependencies/ignore-units
 %{_bindir}/change-booting-mode.sh
+%{_bindir}/check-mount.sh
 
 # systemd service units
 %{_libdir}/systemd/system/tizen-generate-env.service
@@ -98,6 +105,8 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %endif
 %{_libdir}/systemd/system/check-mount.service
 %{_libdir}/systemd/system/tizen-system.target.wants/check-mount.service
+%{_libdir}/systemd/system/remount-rootfs.service
+%{_libdir}/systemd/system/local-fs.target.wants/remount-rootfs.service
 
 # system initialize units
 %{_libdir}/systemd/system/tizen-init.target
@@ -123,27 +132,31 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %{_libdir}/systemd/system/systemd-udevd-kill.service
 %{_libdir}/systemd/system/systemd-udevd-kill.timer
 
-%if "%{?tizen_profile_name}" == "mobile"
+%if "%{?tizen_profile_name}" == "mobile" || "%{?tizen_profile_name}" == "tv"
 %{_libdir}/systemd/system/graphical.target.wants/systemd-udevd-kill.timer
-%elseif "%{?tizen_profile_name}" == "wearable"
+%else
+%if "%{?tizen_profile_name}" == "wearable"
 %{_libdir}/systemd/system/default.target.wants/systemd-udevd-kill.timer
+%endif
 %endif
 
 %endif
 %manifest %{name}.manifest
 
-# mobile & wearable difference
-%if "%{?tizen_profile_name}" == "mobile"
+# mobile & wearable & tv difference
+%if "%{?tizen_profile_name}" == "mobile" || "%{?tizen_profile_name}" == "tv"
 %{_libdir}/systemd/system/graphical.target.wants/tizen-initial-boot-done.service
 %{_libdir}/systemd/system/graphical.target.wants/tizen-fstrim-user.timer
 %{_libdir}/systemd/system/graphical.target.wants/tizen-readahead-replay.service
-%elseif "%{?tizen_profile_name}" == "wearable"
+%else
+%if "%{?tizen_profile_name}" == "wearable"
 %{_libdir}/systemd/system/default.target.wants/tizen-initial-boot-done.service
 %{_libdir}/systemd/system/default.target.wants/tizen-fstrim-user.timer
 %{_libdir}/systemd/system/multi-user.target.wants/tizen-readahead-replay.service
 %endif
+%endif
 
-%if "%{?tizen_profile_name}" == "mobile"
+%if "%{?tizen_profile_name}" == "mobile" || "%{?tizen_profile_name}" == "tv"
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 
 %{_libdir}/udev/rules.d/51-tizen-udev-default.rules
@@ -153,11 +166,6 @@ touch %{_sysconfdir}/ld.so.nohwcap
 %{_libdir}/systemd/system/multi-user.target.wants/tizen-system.target
 %{_libdir}/systemd/system/tizen-runtime.target
 %{_libdir}/systemd/system/multi-user.target.wants/tizen-runtime.target
-
-%config(noreplace) %{_sysconfdir}/ghost.conf
-%{_bindir}/ghost
-%{_libdir}/systemd/system/ghost.service
-%{_libdir}/systemd/system/multi-user.target.wants/ghost.service
 
 # sysctl
 %{_libdir}/sysctl.d/50-tizen-default.conf
@@ -174,6 +182,8 @@ touch %{_sysconfdir}/ld.so.nohwcap
 
 %{_libdir}/systemd/system/init-conf.service
 %{_libdir}/systemd/system/sysinit.target.wants/init-conf.service
-%elseif "%{?tizen_profile_name}" == "wearable"
+%else
+%if "%{?tizen_profile_name}" == "wearable"
 %{_libdir}/udev/rules.d/51-tizen-udev-default.rules
+%endif
 %endif

@@ -15,6 +15,9 @@ Type=notify
 ExecStart=@rootlibexecdir@/systemd-readahead collect --savedir=@READAHEAD_DIR@
 RemainAfterExit=yes
 StandardOutput=null
+m4_ifdef(`SMACK_LABEL',
+SmackProcessLabel=system-plugin-common::script
+)m4_dnl
 
 [Install]
 WantedBy=tizen-init.target

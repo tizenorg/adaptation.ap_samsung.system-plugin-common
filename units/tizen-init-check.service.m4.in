@@ -9,3 +9,7 @@ RefuseManualStart=yes
 
 [Service]
 ExecStart=/usr/bin/systemctl start tizen-init.target
+m4_ifdef(`SMACK_LABEL',
+SmackProcessLabel=system-plugin-common::script
+)m4_dnl
+

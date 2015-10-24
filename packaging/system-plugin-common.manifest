@@ -1,7 +1,11 @@
 <manifest>
-  <request>
-    <domain name="_"/>
-  </request>
+  <define>
+    <domain name="system-plugin-common::script"/>
+    <request>
+      <smack request="e17" type="r" />
+      <smack request="system::sys_logging" type="rwx" />
+    </request>
+  </define>
   <assign>
     <filesystem path="/bin/*" label="_" exec_label="none" />
     <filesystem path="/sbin/*" label="_" exec_label="none" />

@@ -1,6 +1,6 @@
 [Unit]
 Description=Tizen Runtime
-Requires=basic.target tizen-boot.target tizen-system.target
+Requires=tizen-system.target
 Conflicts=rescue.service rescue.target
-After=basic.target tizen-boot.target tizen-system.target rescue.service rescue.target
+After=tizen-system.target rescue.service rescue.target
 Before=multi-user.target

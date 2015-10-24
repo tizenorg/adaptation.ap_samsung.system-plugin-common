@@ -15,7 +15,9 @@ userunitdir=$(prefix)/lib/systemd/user
 udevlibexecdir=$(rootprefix)/lib/udev
 udevhomedir=$(udevlibexecdir)
 udevrulesdir=$(udevlibexecdir)/rules.d
-if MOBILE
+
+if WEARABLE
+else # MOBILE or TV profile
 sysctldir=$(prefix)/lib/sysctl.d
 endif
 
@@ -28,7 +30,8 @@ if WITH_ENGMODE
 engbindir=/opt/usr/devel/$(rootbindir)
 endif
 
-if MOBILE
+if WEARABLE
+else # MOBILE or TV profile
 noinst_LTLIBRARIES =
 noinst_DATA =
 sysctl_DATA =
@@ -48,7 +51,8 @@ if WITH_ENGMODE
 engbin_PROGRAMS =
 endif
 
-if MOBILE
+if WEARABLE
+else # MOBILE or TV profile
 AM_CPPFLAGS = \
 	-include $(top_builddir)/config.h \
 	-I $(top_srcdir)/src \
@@ -76,7 +80,8 @@ MULTI_USER_TARGET_WANTS =
 DEFAULT_TARGET_WANTS =
 SYSCONF_LOCAL_FS_TARGET_WANTS =
 
-if MOBILE
+if WEARABLE
+else # MOBILE or TV profile
 GRAPHICAL_TARGET_WANTS =
 endif
 
@@ -94,7 +99,8 @@ install-target-wants-hook:
 	where=$(systemunitdir) && what="$(TIZEN_SYSTEM_TARGET_WANTS)" && wants=tizen-system.target && $(add-wants)
 	where=$(systemunitdir) && what="$(TIZEN_RUNTIME_TARGET_WANTS)" && wants=tizen-runtime.target && $(add-wants)
 	where=$(systemunitdir) && what="$(TIZEN_RUNTIME_TARGET_WANTS)" && wants=tizen-runtime.target && $(add-wants)
-if MOBILE
+if WEARABLE
+else # MOBILE or TV profile
 	where=$(systemunitdir) && what="$(GRAPHICAL_TARGET_WANTS)" && wants=graphical.target && $(add-wants)
 endif
 	where=$(systemunitdir) && what="$(DEFAULT_TARGET_WANTS)" && wants=default.target && $(add-wants)
@@ -130,79 +136,26 @@ INSTALL_EXEC_HOOKS += \
 #  AM_V_LN_0 = @echo "  LN      " $@;
 
 # ------------------------------------------------------------------------------
-if MOBILE
+
+if WEARABLE
 bin_SCRIPTS += \
 	scripts/change-booting-mode.sh \
-	scripts/cleanup-storage.sh \
-	scripts/tizen-fstrim-on-charge.sh
+	scripts/tizen-fstrim-on-charge.sh \
+	scripts/check-mount.sh
 
 systemunit_DATA += \
 	units/check-mount.service \
-	units/cleanup-storage.service \
-	units/cleanup-storage.timer \
-	units/ghost.service \
-	units/init-conf.service \
-	units/tizen-boot.target \
+	units/tizen-generate-env.service \
+	units/tizen-readahead-collect.service \
+	units/tizen-readahead-collect-stop.service \
+	units/tizen-readahead-replay.service \
 	units/tizen-fstrim-user.service \
 	units/tizen-fstrim-user.timer \
-	units/tizen-generate-env.service \
 	units/tizen-init.target \
 	units/tizen-init-check.service \
+	units/tizen-initial-boot-done.service \
 	units/tizen-init-done.service \
-	units/tizen-initial-boot-done.service \
-	units/tizen-journal-flush.service \
-	units/tizen-readahead-collect.service \
-	units/tizen-readahead-collect-stop.service \
-	units/tizen-readahead-replay.service \
-	units/tizen-runtime.target \
-	units/tizen-system.target
-
-SYSINIT_TARGET_WANTS += \
-	init-conf.service
-
-TIMERS_TARGET_WANTS += \
-	cleanup-storage.timer
-
-BASIC_TARGET_WANTS += \
-	cleanup-storage.service \
-	tizen-generate-env.service \
-	tizen-init-check.service
-
-TIZEN_INIT_TARGET_WANTS += \
-	tizen-init-done.service \
-	tizen-readahead-collect.service
-
-MULTI_USER_TARGET_WANTS += \
-	ghost.service \
-	tizen-boot.target \
-	tizen-runtime.target \
-	tizen-system.target
-
-GRAPHICAL_TARGET_WANTS += \
-	tizen-fstrim-user.timer \
-	tizen-initial-boot-done.service \
-	tizen-journal-flush.service \
-	tizen-readahead-replay.service
-
-udevrules_DATA += \
-	rules/51-tizen-udev-default.rules
-else
-bin_SCRIPTS += \
-	scripts/change-booting-mode.sh \
-	scripts/tizen-fstrim-on-charge.sh
-
-systemunit_DATA += \
-	units/check-mount.service \
-	units/tizen-generate-env.service \
-	units/tizen-readahead-collect.service \
-	units/tizen-readahead-collect-stop.service \
-	units/tizen-readahead-replay.service \
-	units/tizen-fstrim-user.service \
-	units/tizen-fstrim-user.timer \
-	units/tizen-init.target \
-	units/tizen-init-check.service \
-	units/tizen-initial-boot-done.service \
-	units/tizen-init-done.service
+	units/remount-rootfs.service
 
 BASIC_TARGET_WANTS += \
 	tizen-generate-env.service \
@@ -219,6 +172,69 @@ DEFAULT_TARGET_WANTS += \
 	tizen-fstrim-user.timer \
 	tizen-initial-boot-done.service
 
+LOCAL_FS_TARGET_WANTS += \
+	remount-rootfs.service
+
+udevrules_DATA += \
+	rules/51-tizen-udev-default.rules
+
+else # MOBILE or TV profile
+bin_SCRIPTS += \
+	scripts/change-booting-mode.sh \
+	scripts/cleanup-storage.sh \
+	scripts/tizen-fstrim-on-charge.sh \
+	scripts/check-mount.sh
+
+systemunit_DATA += \
+	units/check-mount.service \
+	units/cleanup-storage.service \
+	units/cleanup-storage.timer \
+	units/init-conf.service \
+	units/tizen-boot.target \
+	units/tizen-fstrim-user.service \
+	units/tizen-fstrim-user.timer \
+	units/tizen-generate-env.service \
+	units/tizen-init.target \
+	units/tizen-init-check.service \
+	units/tizen-init-done.service \
+	units/tizen-initial-boot-done.service \
+	units/tizen-journal-flush.service \
+	units/tizen-readahead-collect.service \
+	units/tizen-readahead-collect-stop.service \
+	units/tizen-readahead-replay.service \
+	units/tizen-runtime.target \
+	units/tizen-system.target \
+	units/remount-rootfs.service
+
+SYSINIT_TARGET_WANTS += \
+	init-conf.service
+
+TIMERS_TARGET_WANTS += \
+	cleanup-storage.timer
+
+LOCAL_FS_TARGET_WANTS += \
+	remount-rootfs.service
+
+BASIC_TARGET_WANTS += \
+	cleanup-storage.service \
+	tizen-generate-env.service \
+	tizen-init-check.service
+
+TIZEN_INIT_TARGET_WANTS += \
+	tizen-init-done.service \
+	tizen-readahead-collect.service
+
+MULTI_USER_TARGET_WANTS += \
+	tizen-boot.target \
+	tizen-runtime.target \
+	tizen-system.target
+
+GRAPHICAL_TARGET_WANTS += \
+	tizen-fstrim-user.timer \
+	tizen-initial-boot-done.service \
+	tizen-journal-flush.service \
+	tizen-readahead-replay.service
+
 udevrules_DATA += \
 	rules/51-tizen-udev-default.rules
 endif
@@ -234,16 +250,17 @@ systemunit_DATA += \
 	units/systemd-udevd-kill.service \
 	units/systemd-udevd-kill.timer
 
-if MOBILE
-GRAPHICAL_TARGET_WANTS += \
-	systemd-udevd-kill.timer
-else
+if WEARABLE
 DEFAULT_TARGET_WANTS += \
+	systemd-udevd-kill.timer
+else # MOBILE or TV profile
+GRAPHICAL_TARGET_WANTS += \
 	systemd-udevd-kill.timer
 endif
 endif
 
-if MOBILE
+if WEARABLE
+else # MOBILE or TV profile
 sysctl_DATA += \
 	sysctl.d/50-tizen-default.conf
 endif
@@ -254,54 +271,6 @@ systemunit_DATA += \
 
 TIZEN_BOOT_TARGET_WANTS += \
 	wm_ready.service
-endif
-
-if MOBILE
-sysconf_DATA += \
-	src/ghost/ghost.conf
-
-ghost_SOURCES = \
-	src/ghost/ghost.c
-
-ghost_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(DBUS_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(GIO_CFLAGS)
-
-bin_PROGRAMS = \
-	ghost
-
-ghost_LDADD = \
-	libsystem-plugin-shared.la \
-	$(DBUS_LIBS) \
-	$(GLIB_LIBS) \
-	$(GIO_LIBS)
-
-# ------------------------------------------------------------------------------
-noinst_LTLIBRARIES += \
-	libsystem-plugin-shared.la
-
-libsystem_plugin_shared_la_SOURCES = \
-	src/shared/conf-parser.c \
-	src/shared/conf-parser.h \
-	src/shared/dbus-common.h \
-	src/shared/fileio.c \
-	src/shared/fileio.h \
-	src/shared/macro.h \
-	src/shared/systemd.c \
-	src/shared/systemd.h \
-	src/shared/util.c \
-	src/shared/util.h
-
-libsystem_plugin_shared_la_CFLAGS = \
-	$(AM_CFLAGS) \
-        $(DBUS_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(GIO_CFLAGS)
-
-libsystem_plugin_shared_la_LIBADD = \
-	$(DBUS_LIBS)
 endif
 
 # ------------------------------------------------------------------------------
@@ -368,7 +337,8 @@ units/%: units/%.in Makefile
 	$(SED_PROCESS)
 	$(AM_V_GEN)chmod +x $@
 
-if MOBILE
+if WEARABLE
+else # MOBILE or TV profile
 src/%: src/%.m4
 	$(AM_V_at)$(MKDIR_P) $(dir $@)
 	$(AM_V_M4)$(M4) -P $(M4_DEFINES) < $< > $@

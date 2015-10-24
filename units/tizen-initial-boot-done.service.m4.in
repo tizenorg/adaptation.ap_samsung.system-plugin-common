@@ -6,6 +6,9 @@ RefuseManualStart=yes
 
 [Service]
 ExecStart=/bin/touch @INITAILBOOT_DONE@
+m4_ifdef(`SMACK_LABEL',
+SmackProcessLabel=system-plugin-common::script
+)m4_dnl
 
 [Install]
 WantedBy=default.target

@@ -9,6 +9,9 @@ ConditionVirtualization=no
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/systemd-notify --readahead=done
+m4_ifdef(`SMACK_LABEL',
+SmackProcessLabel=system-plugin-common::script
+)m4_dnl
 
 [Install]
 Also=tizen-readahead-collect.service

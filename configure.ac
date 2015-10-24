@@ -117,6 +117,53 @@ AC_SUBST(MOBILE)
 AM_CONDITIONAL([MOBILE], [test "x$enable_mobile" != xno])
 
 # ------------------------------------------------------------------------------
+AC_ARG_ENABLE([wearable],
+        AS_HELP_STRING([--enable-wearable],
+                       [enable wearable configuration]),
+                [case "${enableval}" in
+                        yes) enable_wearable=yes ;;
+                        no) enable_wearable=no ;;
+                        *) AC_MSG_ERROR(bad value ${enableval} for --enable-wearable) ;;
+                esac],
+                enable_wearable=no)
+AC_SUBST(WEARABLE)
+AM_CONDITIONAL([WEARABLE], [test "x$enable_wearable" != xno])
+
+# ------------------------------------------------------------------------------
+AC_ARG_ENABLE([tv],
+        AS_HELP_STRING([--enable-tv],
+                       [enable tv configuration]),
+                [case "${enableval}" in
+                        yes) enable_tv=yes ;;
+                        no) enable_tv=no ;;
+                        *) AC_MSG_ERROR(bad value ${enableval} for --enable-tv) ;;
+                esac],
+                enable_tv=no)
+AC_SUBST(TV)
+AM_CONDITIONAL([TV], [test "x$enable_tv" != xno])
+
+if test "x$enable_tv" == "xyes"; then
+        M4_DEFINES="$M4_DEFINES -DTV"
+fi
+
+# ------------------------------------------------------------------------------
+AC_ARG_ENABLE([smack-label],
+        AS_HELP_STRING([--enable-smack-label],
+                       [enable smack process label configuration]),
+                [case "${enableval}" in
+                        yes) enable_smack_label=yes ;;
+                        no) enable_smack_label=no ;;
+                        *) AC_MSG_ERROR(bad value ${enableval} for --enable-smack-label) ;;
+                esac],
+                enable_smack-label=no)
+AC_SUBST(SMACK_LABEL)
+AM_CONDITIONAL([SMACK_LABEL], [test "x$enable_smack_label" != xno])
+
+if test "x$enable_smack_label" == "xyes"; then
+        M4_DEFINES="$M4_DEFINES -DSMACK_LABEL"
+fi
+
+# ------------------------------------------------------------------------------
 AC_ARG_ENABLE([wmready],
         AS_HELP_STRING([--disable-wmready], [without window manager waiting]),
                 [case "${enableval}" in
@@ -185,4 +232,6 @@ AC_MSG_RESULT([
         udevd killer:            ${enable_udevd_killer}
         frequent fstrim:         ${enable_frequent_fstrim}
         enable mobile:           ${enable_mobile}
+        enable wearable:         ${enable_wearable}
+        enable tv:               ${enable_tv}
 ])

@@ -9,3 +9,6 @@ After=systemd-journald.service default.target
 [Service]
 ExecStart=/usr/bin/systemctl kill --kill-who=main --signal=SIGUSR1 systemd-journald.service
 Type=oneshot
+m4_ifdef(`SMACK_LABEL',
+SmackProcessLabel=system-plugin-common::script
+)m4_dnl
